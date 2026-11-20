@@ -260,19 +260,117 @@ export class WordcloudStack extends Stack {
     }
 
     // ------------------------------------------------------------ CloudWatch
+    const errorAlarms: cloudwatch.Alarm[] = [];
     for (const [name, fn] of [
       ['WsHandler', wsHandler],
       ['HttpHandler', httpHandler],
     ] as const) {
-      new cloudwatch.Alarm(this, `${name}ErrorAlarm`, {
-        metric: fn.metricErrors({ period: Duration.minutes(1), statistic: 'Sum' }),
-        threshold: 1,
-        evaluationPeriods: 3,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-        alarmDescription: `${name} のエラーが3分連続で発生しています`,
-      });
+      errorAlarms.push(
+        new cloudwatch.Alarm(this, `${name}ErrorAlarm`, {
+          metric: fn.metricErrors({ period: Duration.minutes(1), statistic: 'Sum' }),
+          threshold: 1,
+          evaluationPeriods: 3,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+          alarmDescription: `${name} のエラーが3分連続で発生しています`,
+        }),
+      );
     }
+
+    // ダッシュボード(Observability Setup Q2)。ワークショップ中に主催者が開いておく1枚。
+    const minute = Duration.minutes(1);
+    const wsMetric = (metricName: string, statistic = 'Sum') =>
+      new cloudwatch.Metric({
+        namespace: 'AWS/ApiGateway',
+        metricName,
+        dimensionsMap: { ApiId: wsApi.apiId, Stage: WS_STAGE_NAME },
+        statistic,
+        period: minute,
+      });
+    const dashboard = new cloudwatch.Dashboard(this, 'Dashboard', {
+      dashboardName: 'wordcloud-workshop',
+      defaultInterval: Duration.hours(3),
+    });
+    dashboard.addWidgets(
+      new cloudwatch.TextWidget({
+        markdown:
+          '## ワードクラウド(ワークショップ用)\n目標: 送信の99%が成功し、95%が3秒以内に表示へ反映される(開催中の数時間)。',
+        width: 24,
+        height: 2,
+      }),
+    );
+    dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'Lambda エラー数(1分ごと)',
+        left: [
+          wsHandler.metricErrors({ period: minute, statistic: 'Sum', label: 'WsHandler' }),
+          httpHandler.metricErrors({ period: minute, statistic: 'Sum', label: 'HttpHandler' }),
+        ],
+        width: 8,
+      }),
+      new cloudwatch.GraphWidget({
+        title: 'Lambda 実行時間 p95(ミリ秒)',
+        left: [
+          wsHandler.metricDuration({ period: minute, statistic: 'p95', label: 'WsHandler' }),
+          httpHandler.metricDuration({ period: minute, statistic: 'p95', label: 'HttpHandler' }),
+        ],
+        leftAnnotations: [{ value: 3000, label: '目標 3秒' }],
+        width: 8,
+      }),
+      new cloudwatch.GraphWidget({
+        title: 'Lambda 同時実行数(最大)',
+        left: [
+          wsHandler.metric('ConcurrentExecutions', { period: minute, statistic: 'Maximum', label: 'WsHandler' }),
+          httpHandler.metric('ConcurrentExecutions', { period: minute, statistic: 'Maximum', label: 'HttpHandler' }),
+        ],
+        width: 8,
+      }),
+    );
+    dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'WebSocket 接続とメッセージ(1分ごと)',
+        left: [wsMetric('ConnectCount'), wsMetric('MessageCount')],
+        width: 8,
+      }),
+      new cloudwatch.GraphWidget({
+        title: 'WebSocket エラー(スロットリングを含む)',
+        left: [wsMetric('ClientError'), wsMetric('ExecutionError'), wsMetric('IntegrationError')],
+        width: 8,
+      }),
+      new cloudwatch.GraphWidget({
+        title: 'HTTP API 4xx / 5xx',
+        left: [
+          httpApi.metricClientError({ period: minute, statistic: 'Sum', label: '4xx' }),
+          httpApi.metricServerError({ period: minute, statistic: 'Sum', label: '5xx' }),
+        ],
+        width: 8,
+      }),
+    );
+    dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'DynamoDB スロットリング',
+        left: [
+          table.metricThrottledRequestsForOperations({
+            operations: [
+              dynamodb.Operation.GET_ITEM,
+              dynamodb.Operation.PUT_ITEM,
+              dynamodb.Operation.UPDATE_ITEM,
+              dynamodb.Operation.QUERY,
+            ],
+            period: minute,
+          }),
+        ],
+        width: 12,
+      }),
+      new cloudwatch.AlarmStatusWidget({
+        title: 'アラームの状態',
+        alarms: errorAlarms,
+        width: 12,
+      }),
+    );
+    new CfnOutput(this, 'DashboardUrl', {
+      value: `https://${this.region}.console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=wordcloud-workshop`,
+    });
 
     // ------------------------------------------------------------ Outputs
     new CfnOutput(this, 'WebUrl', { value: webOrigin });

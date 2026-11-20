@@ -134,6 +134,15 @@ describe('WordcloudStack (NFR2〜NFR5)', () => {
       Period: 60,
     });
     const out = template.toJSON().Outputs;
-    for (const k of ['WebUrl', 'ApiUrl', 'WsUrl', 'ExtensionId']) expect(out).toHaveProperty(k);
+    for (const k of ['WebUrl', 'ApiUrl', 'WsUrl', 'ExtensionId', 'DashboardUrl']) expect(out).toHaveProperty(k);
+  });
+
+  it('監視用ダッシュボードが1枚あり、Lambda・WebSocket・HTTP API・DynamoDB の指標を含む (NFR4.3)', () => {
+    template.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
+    template.hasResourceProperties('AWS::CloudWatch::Dashboard', { DashboardName: 'wordcloud-workshop' });
+    const body = JSON.stringify(Object.values(template.findResources('AWS::CloudWatch::Dashboard'))[0]);
+    for (const m of ['Errors', 'Duration', 'ConcurrentExecutions', 'ConnectCount', 'MessageCount', '4xx', '5xx', 'ThrottledRequests']) {
+      expect(body).toContain(m);
+    }
   });
 });

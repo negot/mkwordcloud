@@ -33,3 +33,11 @@
 3. `dist/wordcloud-extension.zip` を展開し、`chrome://extensions` でデベロッパーモードを有効にして読み込む。
 4. 拡張機能で参加し、語を送信して表示を確認する。「リセット」と「終了」も確認する。
 5. AWS コンソールの CloudWatch で、`WsHandler` と `HttpHandler` のエラーが 0 であることを確認する。
+
+## 追記: AWS 上の負荷試験(ワークフロー完了後、担当者が実施)
+
+- コマンド: `npm run load-test`(参加者 100 クライアント、30秒間、3,500ms 間隔、ルーム `9TXWH43V`)。
+- 接続 100/100(失敗 0)。送信 864件、ack 864件、表示側の反映 864件。エラー 0件、取りこぼし 0件。
+- 反映の遅延: p50 85ms、p95 129ms、最大 188ms。
+- 判定: 合格(NFR1.2 反映3秒以内、NFR1.3 取りこぼしなし)。詳細は `operation/observability-setup/slo-config.md`。
+- 残り: 実際の Chrome での確認(項目9)と、CloudWatch のエラー確認(項目8)。

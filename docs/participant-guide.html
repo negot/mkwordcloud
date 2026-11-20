@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>参加者向け手順書 | リアルタイム・ワードクラウド</title>
+<style>
+  :root { --accent: #2563eb; --bg: #f8fafc; --card: #fff; --text: #1e293b; --muted: #64748b; --warn: #b45309; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; }
+  header { background: var(--accent); color: #fff; padding: 32px 24px; text-align: center; }
+  header h1 { margin: 0; font-size: 1.8rem; }
+  header p { margin: 8px 0 0; opacity: .9; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px; }
+  section { background: var(--card); border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  h2 { margin-top: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 12px; }
+  .num { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 1.1rem; flex-shrink: 0; }
+  ol, ul { padding-left: 1.4em; }
+  li { margin: 6px 0; }
+  code, kbd { background: #e2e8f0; border-radius: 4px; padding: 1px 6px; font-family: ui-monospace, Menlo, monospace; font-size: .95em; }
+  .btn { display: inline-block; border: 1px solid #94a3b8; border-radius: 6px; padding: 0 8px; background: #f1f5f9; font-size: .95em; white-space: nowrap; }
+  .note { background: #eff6ff; border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 4px; margin: 12px 0; }
+  .warn { background: #fffbeb; border-left: 4px solid var(--warn); padding: 10px 14px; border-radius: 4px; margin: 12px 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f1f5f9; }
+  .summary { font-size: 1.05rem; }
+  .summary li { margin: 4px 0; }
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 16px; }
+  @media print { header { background: none; color: var(--text); border-bottom: 2px solid var(--text); } section { box-shadow: none; border: 1px solid #cbd5e1; break-inside: avoid; } body { background: #fff; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>ワードクラウドに参加する方法</h1>
+  <p>Chrome の拡張機能から、単語や短い文を送ると、会場のスクリーンに表示されます</p>
+</header>
+<main>
+
+<section class="summary">
+  <h2>やることは3つだけです</h2>
+  <ol>
+    <li>拡張機能を Chrome に入れる(最初の1回だけ・約3分)</li>
+    <li>スクリーンに出ている<strong>ルームコード</strong>を入れて参加する</li>
+    <li>思いついた言葉を入力して<span class="btn">送信</span>する</li>
+  </ol>
+  <div class="note">名前やメールアドレスは不要です。送った文は誰が送ったか分からない形で集計され、ワークショップ終了後に削除されます。</div>
+</section>
+
+<section>
+  <h2><span class="num">1</span>準備するもの</h2>
+  <ul>
+    <li>パソコン版の <strong>Google Chrome</strong>(スマートフォンでは使えません)</li>
+    <li>主催者から配られた <code>wordcloud-extension.zip</code></li>
+  </ul>
+  <div class="warn">会社が管理しているパソコンでは、拡張機能を追加できないことがあります。手順2の「デベロッパー モード」が選べない場合は、主催者に伝えてください。</div>
+</section>
+
+<section>
+  <h2><span class="num">2</span>拡張機能を Chrome に入れる(最初の1回だけ)</h2>
+  <ol>
+    <li><code>wordcloud-extension.zip</code> をダブルクリックして展開(解凍)します。フォルダ <code>wordcloud-extension</code> ができます。
+      <br><small>Windows の場合は、右クリックして「すべて展開」を選びます。</small></li>
+    <li>Chrome のアドレスバーに <code>chrome://extensions</code> と入力して <kbd>Enter</kbd> を押します。</li>
+    <li>画面右上の <span class="btn">デベロッパー モード</span> のスイッチをオンにします。</li>
+    <li>左上に出る <span class="btn">パッケージ化されていない拡張機能を読み込む</span> を押します。</li>
+    <li>手順1で展開したフォルダ(中に <code>manifest.json</code> が入っているフォルダ)を選びます。</li>
+    <li>一覧に「<strong>ワードクラウド送信</strong>」が出たら完了です。</li>
+    <li>使いやすくするため、Chrome 右上のパズルの形のアイコンを押し、「ワードクラウド送信」の横のピンを押して、ツールバーに固定します。</li>
+  </ol>
+  <div class="note">Chrome の起動時に「デベロッパー モードの拡張機能を無効にする」という案内が出ることがあります。この拡張機能を使っている間は、無効にしないでください。</div>
+</section>
+
+<section>
+  <h2><span class="num">3</span>ルームに参加する</h2>
+  <ol>
+    <li>ツールバーの「ワードクラウド送信」のアイコンを押します。</li>
+    <li><strong>ルームコード</strong>の欄に、スクリーンや案内に出ている8文字のコード(例: <code>ABCD2345</code>)を入力します。小文字で入れても大丈夫です。</li>
+    <li><span class="btn">参加</span> を押します。</li>
+    <li>入力欄と <span class="btn">送信</span> ボタンが出て、上に「接続済み」と表示されたら参加できています。</li>
+  </ol>
+  <div class="note">一度参加したルームコードは覚えておくので、次に開いたときは入力済みになっています。</div>
+</section>
+
+<section>
+  <h2><span class="num">4</span>言葉を送る</h2>
+  <ol>
+    <li>入力欄に、単語や短い文を入れます(例: 「チームワーク」「楽しい」「新しい発見があった」)。</li>
+    <li><span class="btn">送信</span> を押すか、<kbd>Enter</kbd> を押します。</li>
+    <li>数秒以内に、会場のスクリーンのワードクラウドに反映されます。<strong>多くの人が送った言葉ほど大きく</strong>表示されます。</li>
+  </ol>
+  <ul>
+    <li>1回に送れるのは <strong>100文字</strong>までです。入力欄の下に残りの文字数が出ます。</li>
+    <li>送れるのは <strong>1秒に1回、1分に20回</strong>までです。</li>
+    <li>日本語の文は自動で単語に分けられ、「は」「が」「です」などは表示されません。英語も使えます。</li>
+    <li>自分が送った内容は、ポップアップの中にだけ表示されます。他の人の送信内容は見えません。</li>
+  </ul>
+  <div class="warn">ワークショップにふさわしくない言葉は送らないでください。スクリーンに大きく映ります。</div>
+</section>
+
+<section>
+  <h2><span class="num">5</span>こんなときは</h2>
+  <table>
+    <tr><th>表示されるメッセージ・状態</th><th>どうすればよいか</th></tr>
+    <tr><td>ルームが終了したか、存在しません。</td><td>ルームコードを見直してください。それでも参加できない場合は、主催者に新しいコードを確認してください。</td></tr>
+    <tr><td>送信が早すぎます。1秒以上あけてください。</td><td>少し間をあけて、もう一度送ってください。</td></tr>
+    <tr><td>送信回数の上限(1分に20回)に達しました。</td><td>1分ほど待ってから送ってください。</td></tr>
+    <tr><td>100文字以内で入力してください。</td><td>文を短くしてください。</td></tr>
+    <tr><td>再接続しています…</td><td>通信が一時的に切れています。自動でつながり直すので、そのまま待ってください。長く続く場合は、ポップアップを閉じて開き直してください。</td></tr>
+    <tr><td>ルームは終了しました。</td><td>主催者がルームを終了しました。お疲れさまでした。</td></tr>
+    <tr><td>送ったのにスクリーンに出ない</td><td>1文字だけのひらがなや、「は」「です」などの言葉は表示されません。内容のある言葉を入れてみてください。</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="num">6</span>終わったら</h2>
+  <ul>
+    <li>ポップアップの右上の <span class="btn">退出</span> を押すと、ルームから抜けます。</li>
+    <li>拡張機能が不要になったら、<code>chrome://extensions</code> で「ワードクラウド送信」の <span class="btn">削除</span> を押します。展開したフォルダも削除して構いません。</li>
+  </ul>
+</section>
+
+</main>
+<footer>リアルタイム・ワードクラウド 参加者向け手順書</footer>
+</body>
+</html>
