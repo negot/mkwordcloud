@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node", "chrome"]
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "packages/*/test/**/*.ts",
+    "infra/bin/**/*.ts",
+    "infra/lib/**/*.ts",
+    "infra/test/**/*.ts",
+    "vitest.config.ts"
+  ]
+}

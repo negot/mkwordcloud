@@ -1,0 +1,21 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "notify-on-stop",
+      "trigger": "Stop",
+      "action": {
+        "type": "command",
+        "command": "osascript -e 'display notification \"作業が終了、または質問があります\" with title \"AI-DLC\" sound name \"Glass\"'"
+      }
+    },
+    {
+      "name": "notify-on-permission",
+      "trigger": "PermissionRequest",
+      "action": {
+        "type": "command",
+        "command": "osascript -e 'display notification \"承認が必要です\" with title \"AI-DLC\" sound name \"Basso\"'"
+      }
+    }
+  ]
+}

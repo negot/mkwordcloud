@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>ワードクラウド送信</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <section id="join" data-testid="join">
+      <h1>ワードクラウドに参加</h1>
+      <label for="room-input">ルームコード</label>
+      <input id="room-input" data-testid="room-input" type="text" maxlength="16" autocomplete="off" placeholder="例: ABCD2345" />
+      <button id="join-btn" data-testid="join-btn" type="button" class="primary">参加</button>
+      <p id="join-error" class="error" role="alert" data-testid="join-error"></p>
+    </section>
+
+    <section id="chat" data-testid="chat" hidden>
+      <header>
+        <span id="room-label" data-testid="room-label"></span>
+        <span id="status" data-testid="status"></span>
+        <button id="leave-btn" data-testid="leave-btn" type="button" class="link">退出</button>
+      </header>
+      <ul id="history" data-testid="history" aria-label="送信済み"></ul>
+      <p id="chat-error" class="error" role="alert" data-testid="chat-error"></p>
+      <form id="form">
+        <input id="text-input" data-testid="text-input" type="text" maxlength="100" autocomplete="off" placeholder="単語や短文を入力" />
+        <button id="send-btn" data-testid="send-btn" type="submit" class="primary">送信</button>
+      </form>
+      <p id="counter" data-testid="counter" class="note"></p>
+    </section>
+    <script type="module" src="./popup.js"></script>
+  </body>
+</html>

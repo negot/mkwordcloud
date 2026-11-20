@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>リアルタイム・ワードクラウド</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="home" class="panel" data-testid="home">
+      <h1>リアルタイム・ワードクラウド</h1>
+      <section>
+        <h2>主催者</h2>
+        <p>新しいルームを作成して、投影用のページを開きます。</p>
+        <button type="button" class="primary" data-testid="create-room">ルームを作成</button>
+      </section>
+      <section>
+        <h2>ルームコードで表示</h2>
+        <p>既にあるルームのワードクラウドを表示します。</p>
+        <div class="row">
+          <input type="text" data-testid="room-code-input" maxlength="16" autocomplete="off" placeholder="ルームコード" aria-label="ルームコード" />
+          <button type="button" data-testid="show-room">表示</button>
+        </div>
+      </section>
+      <p id="home-error" class="error" role="alert" data-testid="home-error"></p>
+    </main>
+
+    <main id="created" class="panel" data-testid="created" hidden>
+      <h1>ルームを作成しました</h1>
+      <p>参加者にルームコードを伝えてください。</p>
+      <div class="big" id="created-code" data-testid="created-code"></div>
+      <p>主催者キー(リセット・終了に使います。他の人には見せないでください)</p>
+      <div class="big small" id="created-key" data-testid="created-key"></div>
+      <p class="note">主催者キーはこの端末にだけ保存されます。24時間後にルームは自動で削除されます。</p>
+      <button type="button" class="primary" data-testid="start-display">表示を開始</button>
+    </main>
+
+    <div id="room" data-testid="room" hidden>
+      <header class="bar">
+        <span class="code" data-testid="room-code"></span>
+        <span class="status" data-testid="status"></span>
+        <span class="spacer"></span>
+        <button type="button" class="small-btn" id="reset-btn" data-testid="reset" hidden>リセット</button>
+        <button type="button" class="small-btn danger" id="end-btn" data-testid="end" hidden>終了</button>
+      </header>
+      <svg id="cloud" data-testid="cloud" role="img" aria-label="ワードクラウド"></svg>
+      <p id="room-message" class="overlay" data-testid="room-message" hidden></p>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

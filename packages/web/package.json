@@ -1,0 +1,12 @@
+{
+  "name": "@wordcloud/web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "d3-cloud": "^1.2.7"
+  },
+  "devDependencies": {
+    "@types/d3-cloud": "^1.2.9"
+  }
+}

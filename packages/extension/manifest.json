@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "ワードクラウド送信",
+  "version": "1.0.0",
+  "description": "ワークショップのワードクラウドへ、単語や短文を送信します。",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApex1REqzvP/9Gfn3HHBm/TuhmsTZGZerKrnWNVTYonT6j8Btf9wqiXScV67k/6FnTEM+ldeGWCRVCGBgaiwdQrqLQKIefYj/KkW/bC0v8Rwot+eg8EkRGBd4TPlApudZOH3ywCUe4S+3fpFFBdbq5IkI1ZI+8nzXrSauKbTg5dU9zSaVSSDd67aG0WwG2uZ0mXek6RyG1Pw0qnQUxHcLr0uiLUE5BK+zMICQ0eK9Z9ngdz8UVUNkvtSBb3x+1kCfxGV8ns+P2LO1tMNMJuADqbn4+qUKipYh3DGLL1CUNXbQ807ZwSbOXRbnP8bdDEaYBjLFQjH/J3iPkaTgdg0nAwIDAQAB",
+  "action": {
+    "default_title": "ワードクラウド送信",
+    "default_popup": "popup.html"
+  },
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost:3000/*"]
+}

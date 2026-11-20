@@ -1,0 +1,11 @@
+{
+  "version": "v1",
+  "hooks": [{
+    "name": "notify-on-stop",
+    "trigger": "Stop",
+    "action": {
+      "type": "command",
+      "command": "osascript -e 'display notification \"Kiroが入力待ちです\" with title \"AI-DLC\" sound name \"Glass\"'"
+    }
+  }]
+}
