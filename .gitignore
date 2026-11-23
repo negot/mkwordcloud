@@ -41,3 +41,7 @@ cdk-outputs.json
 deploy-logs/
 cdk.out.deploy/
 .DS_Store
+
+# --- 作業用のファイル(git の対象にしない) ---
+docs/presentation.html
+feature-mobile-form.md
