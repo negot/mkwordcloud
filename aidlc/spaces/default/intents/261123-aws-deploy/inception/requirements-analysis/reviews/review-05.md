@@ -1,0 +1,32 @@
+## Review
+
+**Verdict:** READY
+**Reviewer:** aidlc-product-lead-agent
+**Date:** 2026-11-23T10:50:43Z
+**Iteration:** 1
+**Verdict Dictated:** no
+
+### Findings
+
+| ID | Severity | Location | Finding | Required action | Status |
+|---|---|---|---|---|---|
+| R-01 | Major | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > NFR1 and Open Questions | NFR1 says a prod deploy does not run unless a human approval is "recorded", but the Open Questions leave open whether any approval record exists (a prompt only, or a log). As written, QA cannot tell what evidence proves NFR1 passes. FR3.2 and FR3.3 only require a prompt answered by the developer. | Decide now, or state in NFR1 and FR3, whether a prompt answer is enough or a durable approval record (who, when, which diff) is required. Give a pass/fail check either way. | Resolved (reviewer) |
+| R-02 | Major | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > FR5.2 and NFR2 | The smoke test sends one item from input to display on the prod stack. The requirements do not say which room or code it uses, whether the test data is cleaned up, or how it fits NFR2 (no storing or logging of input text) and the existing prod data that FR1.3 keeps. | Add a requirement for the smoke test data: a dedicated test room or code, a fixed non-personal test string, cleanup or expiry, and that the text is not left in logs. | Resolved (reviewer) |
+| R-03 | Minor | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > FR2.3 and Constraints | Data is not lost on update is shown only by checking the change set for replaced or deleted resources, but the criterion is not explicit. DynamoDB and S3 use `RemovalPolicy.DESTROY`, so a replacement deletes data. FR2.3 does not say what happens if the diff does show a replacement. | State the pass/fail rule: any replace or delete of DynamoDB or S3 resources in the diff stops the deploy until the developer decides. Make FR3.2 show this in the diff step. | Resolved (reviewer) |
+| R-04 | Minor | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > Assumptions A1 and A2, FR6.1 | A2 assumes CDK bootstrap is done and the stack is running. Neither Q2 nor any other question asked about bootstrap, and the file marks it unconfirmed. FR6.1 (the real deploy) depends on it, and FR6.2 gives no handling when it is false. | Add a pre-deploy check requirement (account, region, bootstrap, stack status) with a stop-and-report on failure, or move the check into FR3. | Resolved (reviewer) |
+| R-05 | Minor | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > FR6.2 | Recovery is "fix the cause and redeploy". It does not say what state a failed update leaves the stack in (for example UPDATE_ROLLBACK_FAILED) or what the script reports. | Add that the script reports the stack status on failure and exits non-zero. Say that a stuck rollback is handled by hand and is not automated. | Resolved (reviewer) |
+| R-06 | Minor | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > Intent Analysis and Open Questions | The original request asked for a "deployment pipeline". Q4 narrowed it to a local script. The Open Questions record this, but the success picture does not say so, so the human may miss that no CI/CD is delivered. | Say in the success picture that the deliverable is an approval-gated local script and not an automated pipeline. The human should confirm this at approval. | Resolved (reviewer) |
+| R-07 | Minor | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > Intent Analysis 成功の姿 と FR5.4 | 成功の姿は「デプロイ後の確認が自動で通る」だが、FR5.4 は人が画面で OK と答える手動確認を含む。 | 成功の姿を「自動確認と人による画面確認が通る」に直す。 | Resolved (reviewer) |
+| R-08 | Minor | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > FR5.2 と Open Questions | テストルームは本番の DynamoDB に作られるため「本番データは使わない」と食い違う。確認後に削除するかも未決定。 | テストルームが本番テーブルに残ることを認め、削除の有無と、その作業を誰が行うかを決める。 | Resolved (reviewer) |
+| R-09 | Minor | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > FR5.1 and FR1.1 | FR1.1 は WebSocket をデプロイ対象に含めるが、送信確認の取りやめにより、デプロイ後の確認は HTTP API の応答と画面表示だけになり、WebSocket の疎通はどこでも確認されない。 | WebSocket の疎通は確認しない旨を、既知の制約として FR5 か Assumptions に明記する。接続確認だけ(データ送信なし)を FR5.1 に足す選択もある。 | Resolved (reviewer) |
+| R-10 | Minor | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > FR3.6 | DynamoDB や S3 の置換・削除が必要な変更を意図して行う場合の扱いが書かれていない。停止のみで、人が承知のうえで進める手段がない。 | 意図した置換のときの扱い(例: スクリプトでは進めず、別の手順で人が実施する)を一文で定める。 | Resolved (reviewer) |
+| R-11 | Minor | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > FR5.3 and FR5.4 | FR5.4 は「人が確認した範囲」を完了報告に記録するとしているが、FR5.3 の確認プロンプトは画面表示の確認だけを問う。WebSocket や送信から表示までを人が確認したかを、どこで、どう記録するかが不明。 | 確認プロンプトで WebSocket と送信から表示までの確認有無も尋ねるか、完了報告に人が手書きで記す、のどちらかを定める。 | Resolved (reviewer) |
+| R-12 | Minor | aidlc/spaces/default/intents/261123-aws-deploy/inception/requirements-analysis/requirements.md > FR5.3 and FR5.5 | FR5.3 は「OK でない場合は非ゼロで終了」とし、FR5.5 は「確認しなかった項目は失敗としない」とする。画面表示を「確認しなかった」と答えた場合に、終了コードが 0 か非ゼロか読み取れない。 | 画面表示が「未確認」のときの終了コードと、FR5.3 の「OK」との対応を 1 文で定める。 | New |
+
+> R-10 Reviewer note: FR3.6 と FR2.3 に、警告、一旦停止、別の確認プロンプト、明示的な承知の回答がある場合のみ通常の承認(FR3.2)へ進む流れ、それ以外は非ゼロ終了、が書かれている。ログ記録も FR3.5 に結び付いており、テスト可能。
+
+> R-11 Reviewer note: FR5.5 で、画面表示、WebSocket、送信から表示までを 1 項目ずつ尋ね、承認ログに記録し、未確認は「未確認」、問題ありは非ゼロ終了と定められている。
+
+### Summary
+
+R-10 と R-11 はどちらも解消され、実装に着手できる内容になっている。残る指摘は、FR5.3 と FR5.5 の間で「未確認」の扱いが食い違う軽微な点のみで、着手を妨げない。

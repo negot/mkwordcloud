@@ -64,6 +64,8 @@
 <!-- Format: - ALWAYS [behavior] (affirmed [date]) -->
 <!-- Example: - ALWAYS use Result<T,E> for fallible operations in service layer (affirmed 2026-05-17) -->
 
+- ALWAYS require a human approval before deploying to prod (affirmed 2026-11-23)
+
 ## Corrections
 
 <!-- Project-specific corrections from human feedback. -->
