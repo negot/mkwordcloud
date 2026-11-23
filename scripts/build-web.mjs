@@ -22,6 +22,20 @@ await build({
   sourcemap: false,
   logLevel: 'info',
 });
+// スマートフォン向け入力フォーム(join.html)。FR4.1、FR4.2
+await build({
+  entryPoints: [resolve(src, 'join.ts')],
+  outfile: resolve(dist, 'join.js'),
+  bundle: true,
+  format: 'esm',
+  platform: 'browser',
+  target: 'es2022',
+  minify: true,
+  sourcemap: false,
+  logLevel: 'info',
+});
 await copyFile(resolve(src, 'index.html'), resolve(dist, 'index.html'));
 await copyFile(resolve(src, 'styles.css'), resolve(dist, 'styles.css'));
+await copyFile(resolve(src, 'join.html'), resolve(dist, 'join.html'));
+await copyFile(resolve(src, 'join.css'), resolve(dist, 'join.css'));
 console.log(`Webアプリをビルドしました: ${dist}`);

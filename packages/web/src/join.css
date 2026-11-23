@@ -1,0 +1,30 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 16px; font-size: 16px; color: #1b1f33; background: #fff;
+  font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+}
+main { max-width: 480px; margin: 0 auto; }
+[hidden] { display: none !important; }
+h1 { font-size: 20px; margin: 0 0 16px; }
+label { display: block; margin-bottom: 6px; }
+/* 入力欄とボタンは 44px 以上(FR5.2)。16px 以上の文字で iOS の自動拡大を避ける */
+input[type="text"] {
+  width: 100%; min-height: 48px; padding: 10px 12px; font-size: 16px;
+  border: 1px solid #99a; border-radius: 8px;
+}
+button {
+  font: inherit; min-height: 48px; min-width: 48px; padding: 10px 16px;
+  border-radius: 8px; border: 1px solid #99a; background: #f2f3fa;
+}
+button.primary { background: #2a4bd7; border-color: #2a4bd7; color: #fff; width: 100%; margin-top: 12px; }
+button.primary:disabled { opacity: 0.5; }
+button.link { border: none; background: none; color: #2a4bd7; text-decoration: underline; padding: 0 8px; }
+.error { color: #c0182d; min-height: 1.4em; margin: 8px 0; font-weight: 700; }
+.info { color: #1a7a3a; min-height: 1.4em; margin: 8px 0; font-weight: 700; }
+.note { color: #666; font-size: 14px; margin: 6px 0 0; text-align: right; }
+.note.over { color: #c0182d; font-weight: 700; }
+header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+header #room-label { font-weight: 800; letter-spacing: 0.1em; }
+header #status { flex: 1; color: #666; font-size: 14px; }
+#history { list-style: none; margin: 0; padding: 0; }
+#history li { margin: 6px 0; padding: 8px 12px; background: #dfe6ff; border-radius: 12px; word-break: break-all; }

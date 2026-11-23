@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ワードクラウドに参加</title>
+    <link rel="stylesheet" href="./join.css" />
+  </head>
+  <body>
+    <main id="join" data-testid="join">
+      <h1>ワードクラウドに参加</h1>
+      <label for="room-input">ルームコード</label>
+      <input id="room-input" data-testid="room-input" type="text" maxlength="16" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="例: ABCD2345" />
+      <button id="join-btn" data-testid="join-btn" type="button" class="primary">参加</button>
+      <p id="join-error" class="error" role="alert" data-testid="join-error"></p>
+    </main>
+
+    <main id="chat" data-testid="chat" hidden>
+      <header>
+        <span id="room-label" data-testid="room-label"></span>
+        <span id="status" data-testid="status" role="status"></span>
+        <button id="leave-btn" data-testid="leave-btn" type="button" class="link">退出</button>
+      </header>
+      <form id="form" data-testid="form">
+        <label for="text-input">単語や短文</label>
+        <input id="text-input" data-testid="text-input" type="text" autocomplete="off" enterkeyhint="send" placeholder="単語や短文を入力" />
+        <p id="counter" data-testid="counter" class="note"></p>
+        <button id="send-btn" data-testid="send-btn" type="submit" class="primary">送信</button>
+      </form>
+      <p id="chat-info" class="info" role="status" data-testid="chat-info"></p>
+      <p id="chat-error" class="error" role="alert" data-testid="chat-error"></p>
+      <ul id="history" data-testid="history" aria-label="送信済み"></ul>
+    </main>
+    <script type="module" src="./join.js"></script>
+  </body>
+</html>
