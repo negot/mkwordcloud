@@ -1,8 +1,10 @@
 import { ROOM_TTL_SECONDS, type RateState } from '@wordcloud/core';
 import {
   RATE_TTL_SECONDS,
+  sortEntriesNewestFirst,
   sortWords,
   type ConnectionInfo,
+  type Entry,
   type Repository,
   type RoomMeta,
   type WordCount,
@@ -17,6 +19,7 @@ interface Timed<T> {
 export class MemoryRepository implements Repository {
   private rooms = new Map<string, Timed<RoomMeta>>();
   private words = new Map<string, Map<string, Timed<number>>>();
+  private entries = new Map<string, Map<string, Timed<Entry>>>(); // room -> id -> 入力文
   private conns = new Map<string, Timed<ConnectionInfo>>();
   private viewers = new Map<string, Map<string, number>>(); // room -> connId -> ttl
   private rates = new Map<string, Timed<RateState>>();
@@ -48,11 +51,33 @@ export class MemoryRepository implements Repository {
   async deleteRoom(code: string): Promise<void> {
     this.rooms.delete(code);
     this.words.delete(code);
+    this.entries.delete(code);
     this.viewers.delete(code);
   }
 
   async resetWords(code: string): Promise<void> {
     this.words.delete(code);
+  }
+
+  async addEntry(code: string, entry: Entry, ttl: number): Promise<void> {
+    let m = this.entries.get(code);
+    if (!m) {
+      m = new Map();
+      this.entries.set(code, m);
+    }
+    m.set(entry.id, { value: entry, ttl });
+  }
+
+  async listEntries(code: string): Promise<Entry[]> {
+    const m = this.entries.get(code);
+    if (!m) return [];
+    const out: Entry[] = [];
+    for (const t of m.values()) if (this.alive(t.ttl)) out.push(t.value);
+    return sortEntriesNewestFirst(out);
+  }
+
+  async resetEntries(code: string): Promise<void> {
+    this.entries.delete(code);
   }
 
   async incrementWords(code: string, words: string[], ttl: number): Promise<WordCount[]> {

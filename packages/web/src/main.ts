@@ -1,6 +1,7 @@
-import type { ServerMessage, WordCount } from '@wordcloud/core/protocol';
+import type { Entry, ServerMessage, WordCount } from '@wordcloud/core/protocol';
 import { createRoom, endRoom, resetRoom, roomExists } from './api.js';
 import { RENDER_INTERVAL_MS, renderCloud } from './cloud.js';
+import { adjustScroll, applyEntries, countAddedAbove, formatTime } from './entries.js';
 import {
   HOST_KEY_PREFIX,
   buildViewerWsUrl,
@@ -27,6 +28,9 @@ const STATUS_TEXT: Record<ConnectionStatus, string> = {
 let config: AppConfig;
 let socket: ReconnectingSocket | undefined;
 let words: WordCount[] = [];
+let entries: Entry[] = [];
+let renderedFirstId: string | undefined;
+let entriesTimer: ReturnType<typeof setTimeout> | undefined;
 let lastRender = 0;
 let renderTimer: ReturnType<typeof setTimeout> | undefined;
 let currentRoom = '';
@@ -67,12 +71,46 @@ function showRoomMessage(text: string | null): void {
   el.textContent = text ?? '';
 }
 
+/** 一覧欄を描き直す。文は textContent で入れ、HTML として解釈させない(FR1.6)。 */
+function renderEntries(): void {
+  entriesTimer = undefined;
+  const list = $<HTMLUListElement>('#entries');
+  const oldTop = list.scrollTop;
+  const oldHeight = list.scrollHeight;
+  const added = countAddedAbove(renderedFirstId, entries);
+  const frag = document.createDocumentFragment();
+  for (const e of entries) {
+    const li = document.createElement('li');
+    li.dataset.testid = 'entry';
+    const time = document.createElement('span');
+    time.className = 'time';
+    time.textContent = formatTime(e.at);
+    const text = document.createElement('span');
+    text.className = 'text';
+    text.textContent = e.text;
+    li.append(time, text);
+    frag.append(li);
+  }
+  list.replaceChildren(frag);
+  $('#entries-empty').hidden = entries.length > 0;
+  renderedFirstId = entries[0]?.id;
+  // FR1.5: 先頭より下を読んでいるときは、足した分だけずらして読んでいる行を動かさない
+  list.scrollTop = added > 0 ? adjustScroll(oldTop, oldHeight, list.scrollHeight) : oldTop;
+}
+
+function scheduleEntriesRender(): void {
+  if (entriesTimer === undefined) entriesTimer = setTimeout(renderEntries, 50);
+}
+
 // ---------------------------------------------------------------- 画面
 
 function openRoom(code: string): void {
   closeRoom();
   currentRoom = code;
   words = [];
+  entries = [];
+  renderedFirstId = undefined;
+  renderEntries();
   show('room');
   showRoomMessage(null);
   $('.code').textContent = code;
@@ -93,6 +131,9 @@ function openRoom(code: string): void {
       } else if (m.type === 'update') {
         words = mergeWords(words, m.words);
         scheduleRender();
+      } else if (m.type === 'entries' || m.type === 'entry') {
+        entries = applyEntries(entries, m);
+        scheduleEntriesRender();
       } else if (m.type === 'ended' || (m.type === 'error' && m.code === 'no_room')) {
         showRoomMessage('ルームは終了しました');
         socket?.stop();
@@ -107,6 +148,8 @@ function closeRoom(): void {
   socket = undefined;
   clearTimeout(renderTimer);
   renderTimer = undefined;
+  clearTimeout(entriesTimer);
+  entriesTimer = undefined;
 }
 
 async function openFromInput(raw: string): Promise<void> {

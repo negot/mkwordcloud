@@ -23,6 +23,8 @@ button.link { border: none; background: none; color: #2a4bd7; text-decoration: u
 .info { color: #1a7a3a; min-height: 1.4em; margin: 8px 0; font-weight: 700; }
 .note { color: #666; font-size: 14px; margin: 6px 0 0; text-align: right; }
 .note.over { color: #c0182d; font-weight: 700; }
+/* 入力欄の近くの、保存の周知(FR3.1) */
+.note.retention { text-align: left; }
 header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 header #room-label { font-weight: 800; letter-spacing: 0.1em; }
 header #status { flex: 1; color: #666; font-size: 14px; }

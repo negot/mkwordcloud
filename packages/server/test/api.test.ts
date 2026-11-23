@@ -47,6 +47,47 @@ describe('REST の経路と CORS (NFR2.6)', () => {
   });
 });
 
+describe('入力文の削除 API (FR1.7)', () => {
+  const entry = { id: 'e1', text: '猫が好きです', at: 1_700_000_000_000 };
+  async function room() {
+    const ctx = makeDeps();
+    const created = await handleRest({ method: 'POST', path: '/rooms', headers: { origin: ORIGIN }, body: '' }, ctx.deps);
+    const { roomCode, hostKey } = JSON.parse(created.body) as { roomCode: string; hostKey: string };
+    await ctx.deps.repo.addEntry(roomCode, entry, Math.floor(ctx.clock.t / 1000) + 1000);
+    return { ...ctx, roomCode, hostKey };
+  }
+
+  it('リセットの API で保存した文が消える', async () => {
+    const c = await room();
+    const r = await handleRest(
+      { method: 'POST', path: `/rooms/${c.roomCode}/reset`, headers: { 'x-host-key': c.hostKey } },
+      c.deps,
+    );
+    expect(r.status).toBe(200);
+    expect(await c.deps.repo.listEntries(c.roomCode)).toEqual([]);
+  });
+
+  it('ルームの終了で文も消える', async () => {
+    const c = await room();
+    const r = await handleRest(
+      { method: 'DELETE', path: `/rooms/${c.roomCode}`, headers: { 'x-host-key': c.hostKey } },
+      c.deps,
+    );
+    expect(r.status).toBe(200);
+    expect(await c.deps.repo.listEntries(c.roomCode)).toEqual([]);
+  });
+
+  it('主催者キーが違うと文は消えない', async () => {
+    const c = await room();
+    const r = await handleRest(
+      { method: 'POST', path: `/rooms/${c.roomCode}/reset`, headers: { 'x-host-key': 'wrong' } },
+      c.deps,
+    );
+    expect(r.status).toBe(403);
+    expect(await c.deps.repo.listEntries(c.roomCode)).toEqual([entry]);
+  });
+});
+
 describe('ローカルサーバーの往復 (NFR6.1, FR3.5)', () => {
   let server: LocalServer;
   beforeAll(async () => {

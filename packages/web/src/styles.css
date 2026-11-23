@@ -39,7 +39,18 @@ button.primary:hover { background: #ffdf8f; }
 .bar .spacer { flex: 1; }
 .small-btn { padding: 6px 12px; font-size: 14px; opacity: 0.75; }
 .small-btn.danger { border-color: #8a3b4a; }
-#cloud { flex: 1; width: 100%; min-height: 0; }
+#cloud { flex: 1 1 0; width: 100%; min-height: 0; }
+/* 下半分: 入力された文の一覧(上半分のワードクラウドと 1 対 1)。FR1.1 */
+.entries-pane {
+  flex: 1 1 0; min-height: 0; display: flex; flex-direction: column;
+  border-top: 2px solid #26305e; background: #0e1530;
+}
+.entries { list-style: none; margin: 0; padding: 0; flex: 1; min-height: 0; overflow-y: auto; overflow-anchor: none; }
+.entries li { display: flex; gap: 16px; padding: 8px 20px; border-bottom: 1px solid #1b2347; font-size: 20px; line-height: 1.5; }
+.entries .time { flex: none; color: var(--muted); font-variant-numeric: tabular-nums; }
+.entries .text { flex: 1; min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.entries-empty { margin: 0; padding: 12px 20px; color: var(--muted); font-size: 16px; }
+.entries-empty[hidden] { display: none; }
 .overlay {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   margin: 0; background: rgba(11, 16, 32, 0.92); font-size: 48px; font-weight: 800;

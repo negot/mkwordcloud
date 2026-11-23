@@ -9,9 +9,12 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { ROOM_TTL_SECONDS, type RateState } from '@wordcloud/core';
 import {
+  ENTRY_SK_PREFIX,
   RATE_TTL_SECONDS,
+  entrySk,
   sortWords,
   type ConnectionInfo,
+  type Entry,
   type Repository,
   type RoomMeta,
   type WordCount,
@@ -24,7 +27,7 @@ const META = 'META';
 
 /**
  * DynamoDB 単一テーブル実装。キー設計:
- * - ROOM#<code> / META, WORD#<word>, VIEWER#<connId>
+ * - ROOM#<code> / META, WORD#<word>, VIEWER#<connId>, ENTRY#<時刻13桁>#<id>(入力文。FR2.1)
  * - CONN#<connId> / META
  * - RATE#<room>#<clientId> / META
  * DynamoDB の TTL による削除は遅れることがあるため、読み取り時にも ttl を確認する。
@@ -113,6 +116,50 @@ export class DynamoRepository implements Repository {
 
   async resetWords(code: string): Promise<void> {
     await this.batchDelete(await this.queryKeys(roomPk(code), 'WORD#'));
+  }
+
+  async addEntry(code: string, entry: Entry, ttl: number): Promise<void> {
+    await this.doc.send(
+      new PutCommand({
+        TableName: this.tableName,
+        Item: {
+          pk: roomPk(code),
+          sk: entrySk(entry),
+          id: entry.id,
+          text: entry.text,
+          at: entry.at,
+          ttl,
+        },
+      }),
+    );
+  }
+
+  /** 新しい順(sk の降順)に全件を取り出す。期限切れは読み取り時にも除く。NFR1 */
+  async listEntries(code: string): Promise<Entry[]> {
+    const out: Entry[] = [];
+    const now = this.nowSec();
+    let start: Record<string, unknown> | undefined;
+    do {
+      const r = await this.doc.send(
+        new QueryCommand({
+          TableName: this.tableName,
+          KeyConditionExpression: 'pk = :pk AND begins_with(sk, :p)',
+          ExpressionAttributeValues: { ':pk': roomPk(code), ':p': ENTRY_SK_PREFIX },
+          ScanIndexForward: false,
+          ExclusiveStartKey: start,
+        }),
+      );
+      for (const i of r.Items ?? []) {
+        if (typeof i.ttl === 'number' && i.ttl <= now) continue;
+        out.push({ id: String(i.id), text: String(i.text), at: Number(i.at) });
+      }
+      start = r.LastEvaluatedKey;
+    } while (start);
+    return out;
+  }
+
+  async resetEntries(code: string): Promise<void> {
+    await this.batchDelete(await this.queryKeys(roomPk(code), ENTRY_SK_PREFIX));
   }
 
   async incrementWords(code: string, words: string[], ttl: number): Promise<WordCount[]> {

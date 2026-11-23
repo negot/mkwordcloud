@@ -1,4 +1,6 @@
+import { randomUUID } from 'node:crypto';
 import {
+  ENTRY_CHUNK_SIZE,
   ERROR_MESSAGES,
   TOP_WORDS,
   checkRate,
@@ -10,6 +12,7 @@ import {
   validateText,
   verifyHostKey,
   type ClientMessage,
+  type Entry,
   type ErrorCode,
   type ServerMessage,
   type Tokenize,
@@ -178,7 +181,9 @@ async function hostAction(
   const viewers = await deps.repo.listViewers(code);
   if (action === 'reset') {
     await deps.repo.resetWords(code);
+    await deps.repo.resetEntries(code); // FR1.7: 保存した文も消す
     await broadcast(deps, viewers, { type: 'snapshot', words: [] });
+    await broadcast(deps, viewers, { type: 'entries', items: [], replace: true });
   } else {
     await deps.repo.deleteRoom(code);
     await broadcast(deps, viewers, { type: 'ended' });
@@ -257,7 +262,7 @@ function parseClientMessage(body: string): ClientMessage | null {
   }
 }
 
-/** 受信メッセージを処理する。入力テキストそのものは保存もログ出力もしない(FR3.7、NFR3.3)。 */
+/** 受信メッセージを処理する。入力テキストは、ルームの寿命(24時間)の間だけ保存する。ログには出さない(FR2.1、NFR1)。 */
 export async function handleWsMessage(input: { connId: string; body: string }, deps: Deps): Promise<void> {
   const msg = parseClientMessage(input.body ?? '');
   if (!msg) return sendError(deps, input.connId, 'invalid_json');
@@ -275,6 +280,15 @@ export async function handleWsMessage(input: { connId: string; body: string }, d
     if (conn.role !== 'viewer') return sendError(deps, input.connId, 'forbidden');
     const words = (await deps.repo.getWords(conn.room)).slice(0, TOP_WORDS);
     await deps.pusher.push(input.connId, { type: 'snapshot', words });
+    // FR2.3: 保存済みの文を新しい順に ENTRY_CHUNK_SIZE 件ずつ送る。空でも replace:true の 1 つを送る。
+    const entries = await deps.repo.listEntries(conn.room);
+    for (let i = 0; i === 0 || i < entries.length; i += ENTRY_CHUNK_SIZE) {
+      await deps.pusher.push(input.connId, {
+        type: 'entries',
+        items: entries.slice(i, i + ENTRY_CHUNK_SIZE),
+        replace: i === 0,
+      });
+    }
     return;
   }
 
@@ -295,10 +309,15 @@ export async function handleWsMessage(input: { connId: string; body: string }, d
   await deps.repo.putRate(conn.room, connKey, byConn.state);
 
   const words = await deps.tokenize(v.text);
+  // FR2.1: 語に分けた結果が空でも、整形済みの文は保存して表示用の画面へ送る。文はログに出さない(NFR1)。
+  const entry: Entry = { id: randomUUID(), text: v.text, at: now };
+  await deps.repo.addEntry(conn.room, entry, room.ttl);
+  const viewers = await deps.repo.listViewers(conn.room);
   if (words.length > 0) {
     const updated = await deps.repo.incrementWords(conn.room, words, room.ttl);
-    const viewers = await deps.repo.listViewers(conn.room);
     await broadcast(deps, viewers, { type: 'update', words: updated });
   }
+  // FR2.4、FR2.5: 文は表示用の接続だけへ。参加者へは ack のみ。
+  await broadcast(deps, viewers, { type: 'entry', item: entry });
   await deps.pusher.push(input.connId, { type: 'ack' });
 }

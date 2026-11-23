@@ -83,7 +83,7 @@ describe('投稿の集計と配信 (FR3.1, FR3.5, FR3.6, FR3.7)', () => {
     });
   });
 
-  it('入力テキストそのものは保存されず、語の回数だけが残る', async () => {
+  it('語の集計には入力テキストそのものが入らない (NFR1)', async () => {
     const ctx = await setup();
     await connect(ctx, 'p1', 'participant');
     const text = 'secret phrase here';
@@ -203,7 +203,9 @@ describe('主催者の操作 (FR1.3, FR1.4, FR1.6)', () => {
     );
     expect(r.status).toBe(200);
     expect(await ctx.deps.repo.getWords(ctx.roomCode)).toEqual([]);
-    expect(ctx.pusher.to('v1').at(-1)).toEqual({ type: 'snapshot', words: [] });
+    expect(ctx.pusher.to('v1')).toContainEqual({ type: 'snapshot', words: [] });
+    expect(ctx.pusher.to('v1').at(-1)).toEqual({ type: 'entries', items: [], replace: true });
+    expect(await ctx.deps.repo.listEntries(ctx.roomCode)).toEqual([]);
   });
 
   it('終了するとルームの全データが消え、表示側へ ended が届く', async () => {
@@ -219,5 +221,98 @@ describe('主催者の操作 (FR1.3, FR1.4, FR1.6)', () => {
     expect(await ctx.deps.repo.getRoom(ctx.roomCode)).toBeNull();
     expect(await ctx.deps.repo.getWords(ctx.roomCode)).toEqual([]);
     expect(ctx.pusher.to('v1').at(-1)).toEqual({ type: 'ended' });
+  });
+});
+
+describe('入力文の一覧 (FR1.7, FR2.1, FR2.3-FR2.6, NFR1)', () => {
+  it('送信した文は保存され、表示側にだけ entry が届く。参加者には ack だけ (FR2.4, FR2.5)', async () => {
+    const ctx = await setup();
+    await connect(ctx, 'v1', 'viewer');
+    await connect(ctx, 'p1', 'participant');
+    await handleWsMessage({ connId: 'p1', body: submit('猫が好きです') }, ctx.deps);
+    const entry = ctx.pusher.to('v1').find((m) => m.type === 'entry');
+    expect(entry).toEqual({
+      type: 'entry',
+      item: { id: expect.any(String), text: '猫が好きです', at: ctx.clock.t },
+    });
+    expect(ctx.pusher.to('p1')).toEqual([{ type: 'ack' }]);
+    expect(await ctx.deps.repo.listEntries(ctx.roomCode)).toHaveLength(1);
+  });
+
+  it('語に分けた結果が空でも、文は保存して送る。update は送らない (FR2.1)', async () => {
+    const ctx = await setup();
+    await connect(ctx, 'v1', 'viewer');
+    await connect(ctx, 'p1', 'participant');
+    const empty = makeDeps({ tokenize: async () => [] });
+    ctx.deps.tokenize = empty.deps.tokenize;
+    await handleWsMessage({ connId: 'p1', body: submit('hello') }, ctx.deps);
+    expect(ctx.pusher.to('v1').map((m) => m.type)).toEqual(['entry']);
+    expect(await ctx.deps.repo.listEntries(ctx.roomCode)).toHaveLength(1);
+  });
+
+  it('既存の update と ack の内容は変わらない (FR2.6)', async () => {
+    const ctx = await setup();
+    await connect(ctx, 'v1', 'viewer');
+    await connect(ctx, 'p1', 'participant');
+    await handleWsMessage({ connId: 'p1', body: submit('Cat') }, ctx.deps);
+    expect(ctx.pusher.to('v1')).toContainEqual({ type: 'update', words: [{ word: 'cat', count: 1 }] });
+    expect(ctx.pusher.to('p1')).toContainEqual({ type: 'ack' });
+  });
+
+  it('sync で snapshot に続けて保存済みの文が新しい順に届き、50件ごとに分かれる (FR2.3)', async () => {
+    const ctx = await setup();
+    await connect(ctx, 'p1', 'participant');
+    const ttl = Math.floor(ctx.clock.t / 1000) + 1000;
+    for (let i = 0; i < 120; i++) {
+      await ctx.deps.repo.addEntry(ctx.roomCode, { id: `id${i}`, text: `t${i}`, at: ctx.clock.t + i }, ttl);
+    }
+    await connect(ctx, 'v1', 'viewer');
+    await handleWsMessage({ connId: 'v1', body: JSON.stringify({ type: 'sync' }) }, ctx.deps);
+    const msgs = ctx.pusher.to('v1');
+    expect(msgs[0].type).toBe('snapshot');
+    const chunks = msgs.slice(1) as { type: string; items: { id: string }[]; replace: boolean }[];
+    expect(chunks.map((c) => [c.items.length, c.replace])).toEqual([
+      [50, true],
+      [50, false],
+      [20, false],
+    ]);
+    expect(chunks[0].items[0].id).toBe('id119');
+    expect(chunks[2].items.at(-1)?.id).toBe('id0');
+  });
+
+  it('文が 0 件でも sync に空の entries(replace:true) が届く (FR2.3)', async () => {
+    const ctx = await setup();
+    await connect(ctx, 'v1', 'viewer');
+    await handleWsMessage({ connId: 'v1', body: JSON.stringify({ type: 'sync' }) }, ctx.deps);
+    expect(ctx.pusher.to('v1')).toContainEqual({ type: 'entries', items: [], replace: true });
+  });
+
+  it('参加者は sync できず、文は届かない (FR2.5)', async () => {
+    const ctx = await setup();
+    await connect(ctx, 'p1', 'participant');
+    await handleWsMessage({ connId: 'p1', body: JSON.stringify({ type: 'sync' }) }, ctx.deps);
+    expect(ctx.pusher.to('p1')).toEqual([expect.objectContaining({ code: 'forbidden' })]);
+  });
+
+  it('送信された文は ack と update に含まれず、ログにも出ない (NFR1)', async () => {
+    const ctx = await setup();
+    const logs: string[] = [];
+    const spies = (['log', 'info', 'warn', 'error'] as const).map((k) => {
+      const orig = console[k];
+      console[k] = (...a: unknown[]) => void logs.push(a.map(String).join(' '));
+      return () => (console[k] = orig);
+    });
+    try {
+      await connect(ctx, 'v1', 'viewer');
+      await connect(ctx, 'p1', 'participant');
+      await handleWsMessage({ connId: 'p1', body: submit('secretphrase') }, ctx.deps);
+    } finally {
+      spies.forEach((restore) => restore());
+    }
+    expect(JSON.stringify(ctx.pusher.to('p1'))).not.toContain('secretphrase');
+    const update = ctx.pusher.to('v1').find((m) => m.type === 'update');
+    expect(JSON.stringify(update)).toContain('secretphrase'); // 語としては入る(既存の動作)
+    expect(JSON.stringify(ctx.pusher.to('v1').filter((m) => m.type === 'ack'))).not.toContain('secretphrase');
+    expect(logs.join('\n')).not.toContain('secretphrase');
   });
 });

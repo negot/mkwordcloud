@@ -8,6 +8,15 @@ export interface WordCount {
   count: number;
 }
 
+/** 一覧欄に並べる入力文 1 件。id は表示側の重複除去に使う。FR1.2、FR1.5、FR2.1 */
+export interface Entry {
+  id: string;
+  /** 受け付けのときに整形済みの入力文。 */
+  text: string;
+  /** サーバーが受け取った時刻(ミリ秒)。 */
+  at: number;
+}
+
 export type ErrorCode =
   | 'invalid_json'
   | 'empty'
@@ -20,6 +29,10 @@ export type ErrorCode =
 export type ServerMessage =
   | { type: 'snapshot'; words: WordCount[] }
   | { type: 'update'; words: WordCount[] }
+  /** 保存済みの文のまとまり(新しい順)。replace が真なら一覧を作り直す。FR2.3 */
+  | { type: 'entries'; items: Entry[]; replace: boolean }
+  /** 新しい 1 件。FR2.4 */
+  | { type: 'entry'; item: Entry }
   | { type: 'ack' }
   | { type: 'pong' }
   | { type: 'ended' }

@@ -75,6 +75,26 @@ describe('MemoryRepository (FR1.5, FR3.7, NFR3.2)', () => {
     expect(await repo.getRate('R', 'c')).toEqual(s);
     expect(await repo.getRate('R', 'zzz')).toBeUndefined();
   });
+
+  it('入力文が新しい順に返り、期限を過ぎた文は返さない (FR2.1, FR2.2)', async () => {
+    const ttl = Math.floor(now / 1000) + 100;
+    await repo.addEntry('R', { id: 'a', text: '猫が好きです', at: 1000 }, ttl);
+    await repo.addEntry('R', { id: 'b', text: 'hello', at: 2000 }, ttl);
+    await repo.addEntry('R', { id: 'c', text: '古い', at: 3000 }, Math.floor(now / 1000) - 1);
+    expect((await repo.listEntries('R')).map((e) => e.id)).toEqual(['b', 'a']);
+  });
+
+  it('resetEntries は文だけを消し、deleteRoom は文も消す (FR1.7)', async () => {
+    const ttl = Math.floor(now / 1000) + 100;
+    await repo.incrementWords('R', ['a1'], ttl);
+    await repo.addEntry('R', { id: 'a', text: 'x', at: 1 }, ttl);
+    await repo.resetEntries('R');
+    expect(await repo.listEntries('R')).toEqual([]);
+    expect(await repo.getWords('R')).toHaveLength(1);
+    await repo.addEntry('R', { id: 'b', text: 'y', at: 2 }, ttl);
+    await repo.deleteRoom('R');
+    expect(await repo.listEntries('R')).toEqual([]);
+  });
 });
 
 describe('DynamoRepository (aws-sdk-client-mock)', () => {
@@ -146,6 +166,42 @@ describe('DynamoRepository (aws-sdk-client-mock)', () => {
       { word: '猫', count: 4 },
       { word: 'a1', count: 1 },
     ]);
+  });
+
+  it('addEntry は ENTRY#(13桁の時刻)#id の sk で ttl 付きで保存する (FR2.1)', async () => {
+    ddbMock.on(PutCommand).resolves({});
+    await repo.addEntry('R', { id: 'abc', text: '猫が好きです', at: 1_700_000_000_123 }, nowSec + 9);
+    const item = ddbMock.commandCalls(PutCommand)[0].args[0].input.Item;
+    expect(item).toEqual({
+      pk: 'ROOM#R',
+      sk: 'ENTRY#1700000000123#abc',
+      id: 'abc',
+      text: '猫が好きです',
+      at: 1_700_000_000_123,
+      ttl: nowSec + 9,
+    });
+  });
+
+  it('listEntries は新しい順に Query し、期限切れの項目を返さない (FR2.2, NFR1)', async () => {
+    ddbMock.on(QueryCommand).resolves({
+      Items: [
+        { pk: 'ROOM#R', sk: 'ENTRY#0000000000002#b', id: 'b', text: 'two', at: 2, ttl: nowSec + 5 },
+        { pk: 'ROOM#R', sk: 'ENTRY#0000000000001#a', id: 'a', text: 'old', at: 1, ttl: nowSec - 5 },
+      ],
+    });
+    expect(await repo.listEntries('R')).toEqual([{ id: 'b', text: 'two', at: 2 }]);
+    const input = ddbMock.commandCalls(QueryCommand)[0].args[0].input;
+    expect(input.ScanIndexForward).toBe(false);
+    expect(input.ExpressionAttributeValues?.[':p']).toBe('ENTRY#');
+  });
+
+  it('resetEntries は ENTRY# の項目だけを削除する (FR1.7)', async () => {
+    ddbMock.on(QueryCommand).resolves({ Items: [{ pk: 'ROOM#R', sk: 'ENTRY#0000000000001#a' }] });
+    ddbMock.on(BatchWriteCommand).resolves({});
+    await repo.resetEntries('R');
+    expect(ddbMock.commandCalls(QueryCommand)[0].args[0].input.ExpressionAttributeValues?.[':p']).toBe('ENTRY#');
+    const batch = ddbMock.commandCalls(BatchWriteCommand)[0].args[0].input;
+    expect(batch.RequestItems?.wordcloud).toHaveLength(1);
   });
 
   it('viewer の接続は CONN と VIEWER の両方に ttl 付きで保存される', async () => {

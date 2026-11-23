@@ -12,6 +12,8 @@ export const ROOM_TTL_SECONDS = 86400;
 export const TOP_WORDS = 100;
 /** 1語の最大長。 */
 export const MAX_WORD_LENGTH = 30;
+/** sync で 1 メッセージに載せる入力文の最大件数(1 件約 300 バイト以内)。FR2.3 */
+export const ENTRY_CHUNK_SIZE = 50;
 /** ルームコードの長さ。FR1.2 */
 export const ROOM_CODE_LENGTH = 8;
 /** ルームコードに使う文字(紛らわしい文字 I, L, O, 0, 1 を除く)。 */
