@@ -1,0 +1,14 @@
+Stack WordcloudStack
+Resources
+[~] AWS::DynamoDB::Table Table TableCD117FA1
+ └─ [~] BillingMode
+     ├─ [-] PAY_PER_REQUEST
+     └─ [+] PROVISIONED
+[~] AWS::ApiGatewayV2::Stage HttpStage HttpStage99
+ └─ [~] DefaultRouteSettings.ThrottlingRateLimit
+     ├─ [-] 20
+     └─ [+] 50
+[~] AWS::Lambda::Function WsHandler WsHandler11
+ └─ [+] ReservedConcurrentExecutions: 5
+
+✨  Number of stacks with differences: 1

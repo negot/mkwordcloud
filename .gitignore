@@ -38,4 +38,6 @@ cdk.out/
 *.tsbuildinfo
 coverage/
 cdk-outputs.json
+deploy-logs/
+cdk.out.deploy/
 .DS_Store

@@ -1,0 +1,9 @@
+Stack WordcloudStack
+Resources
+[~] AWS::Lambda::Function HttpHandler HttpHandler5678
+ └─ [~] Code
+[+] AWS::S3::BucketPolicy NewPolicy NewPolicy1
+[-] AWS::Logs::LogGroup OldLog OldLog1 destroy
+[~] AWS::CloudWatch::Alarm ErrAlarm ErrAlarm22
+
+✨  Number of stacks with differences: 1

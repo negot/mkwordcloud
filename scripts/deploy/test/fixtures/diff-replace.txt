@@ -1,0 +1,11 @@
+Stack WordcloudStack
+Resources
+[~] AWS::DynamoDB::Table Table TableCD117FA1 replace
+ └─ [~] KeySchema (requires replacement)
+[-] AWS::S3::Bucket OldBucket OldBucket1234 destroy
+[~] AWS::Lambda::Function HttpHandler HttpHandler5678
+ └─ [~] Timeout
+     ├─ [-] 5
+     └─ [+] 6
+
+✨  Number of stacks with differences: 1

@@ -10,6 +10,8 @@
     "infra/bin/**/*.ts",
     "infra/lib/**/*.ts",
     "infra/test/**/*.ts",
+    "scripts/deploy/src/**/*.ts",
+    "scripts/deploy/test/**/*.ts",
     "vitest.config.ts"
   ]
 }
