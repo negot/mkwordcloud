@@ -42,7 +42,7 @@ A. 今すぐ実行する。実行が終わったら、結果を知らせる
 B. 後で実行する。この作業は、結果の報告を待って止める
 X. Other (please specify)
 
-[Answer]:
+[Answer]:A
 
 ## Q3. [品質] デプロイ後に人が確認する範囲
 スクリプトは、自動の確認(HTTP API の 404、表示用 Web が開くこと)のあと、人に次の 3 項目を尋ねます。どこまで確認しますか。(WebSocket と送信から表示までは、自動では確認されません)
@@ -51,7 +51,7 @@ A. 3 項目すべてを確認する: 画面表示、WebSocket の接続、送信
 B. 画面表示だけを確認する。残りは「確認しなかった」として記録する
 X. Other (please specify)
 
-[Answer]:
+[Answer]:A
 
 ## Q4. [運用] 失敗したときの進め方
 デプロイや確認が失敗したとき、どう進めますか。(失敗の内容は、スクリプトが画面に表示し、承認ログに残ります)
@@ -60,4 +60,13 @@ A. 画面の出力と承認ログを私に共有して、原因を調べて直�
 B. 失敗は自分で調べる。結果だけを知らせる
 X. Other (please specify)
 
-[Answer]:
+[Answer]:A
+
+## Consolidated Summary Confirmation
+
+Does this all look correct before I generate the artifact?
+
+- Looks correct
+- Request changes
+
+[Answer]: Looks correct
